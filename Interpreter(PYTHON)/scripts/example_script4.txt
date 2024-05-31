@@ -3,6 +3,8 @@ INT a 5
 INT b 10
 
 # Conditional statement
-IF a < b {
+IF a < b
     PRINT "a is less than b"
-}
+    PRINT "OI"
+ENDIF
+PRINT "TOP"

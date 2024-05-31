@@ -37,7 +37,7 @@ class Interpreter:
                 args = parts[1:]
                 
 
-                if command == 'WHILE':
+                if command == 'WHILE' or command=="IF":
                     i=self.commands[command](args,i,lines)
 
                 elif command in self.commands:
@@ -46,7 +46,6 @@ class Interpreter:
     
     def while_loop(self,args,i,lines):
         condition = ' '.join(args)
-        block_start = i
         block_commands = []
         i += 1
         while i < len(lines) and not lines[i].strip().startswith('ENDWHILE'):
@@ -55,7 +54,6 @@ class Interpreter:
         block_commands = '\n'.join(block_commands)
         while self.evaluate_condition(condition):
             self.execute_commands(block_commands)
-        i += 1  # Skip the 'ENDWHILE' line
         return i
 
     def handle_assignment(self, line):
@@ -74,11 +72,17 @@ class Interpreter:
         if color in colors:
             self.grid.set_color(x, y, colors[color])
 
-    def if_statement(self, args):
-        condition = args[0].lower()
-        block_commands = ' '.join(args[1:])[1:-1].strip()
+    def if_statement(self, args,i,lines):
+        condition = ' '.join(args)
+        block_commands = []
+        i += 1
+        while i < len(lines) and not lines[i].strip().startswith('ENDIF'):
+            block_commands.append(lines[i])
+            i += 1
+        block_commands = '\n'.join(block_commands)
         if self.evaluate_condition(condition):
             self.execute_commands(block_commands)
+        return i
 
     def declare_int(self, args):
         self.variables[args[0]] = int(self.evaluate(args[1]))

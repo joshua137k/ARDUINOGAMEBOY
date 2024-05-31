@@ -47,4 +47,4 @@ class GameEngine:
 
 if __name__ == "__main__":
     engine = GameEngine()
-    engine.run('example_script2.txt')  # Você pode alterar o nome do script aqui
+    engine.run('example_script3.txt')  # Você pode alterar o nome do script aqui
