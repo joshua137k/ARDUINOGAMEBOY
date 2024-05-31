@@ -4,7 +4,6 @@ class Interpreter:
         self.variables = {}
         self.commands = {
             'SET': self.set_color,
-            'FOR': self.for_loop,
             'IF': self.if_statement,
             'PRINT': self.print_message,
             'INT': self.declare_int,
@@ -13,7 +12,7 @@ class Interpreter:
             'MATRIX': self.declare_matrix,
             'VECTOR': self.declare_vector,
             'INPUT': self.input_var,
-            'WHILE': self.while_loop
+            'WHILE':self.while_loop,
         }
 
     def execute_script(self, script_path):
@@ -29,12 +28,39 @@ class Interpreter:
             if not line or line.startswith('#'):
                 i += 1
                 continue
-            parts = line.split()
-            command = parts[0].upper()
-            args = parts[1:]
-            if command in self.commands:
-                self.commands[command](args)
+            if '=' in line:
+                self.handle_assignment(line)
+            else:
+
+                parts = line.split()
+                command = parts[0].upper()
+                args = parts[1:]
+                
+
+                if command == 'WHILE':
+                    i=self.commands[command](args,i,lines)
+
+                elif command in self.commands:
+                    self.commands[command](args)
             i += 1
+    
+    def while_loop(self,args,i,lines):
+        condition = ' '.join(args)
+        block_start = i
+        block_commands = []
+        i += 1
+        while i < len(lines) and not lines[i].strip().startswith('ENDWHILE'):
+            block_commands.append(lines[i])
+            i += 1
+        block_commands = '\n'.join(block_commands)
+        while self.evaluate_condition(condition):
+            self.execute_commands(block_commands)
+        i += 1  # Skip the 'ENDWHILE' line
+        return i
+
+    def handle_assignment(self, line):
+        var_name, expression = map(str.strip, line.split('=', 1))
+        self.variables[var_name] = self.evaluateMath(expression)
 
     def set_color(self, args):
         x, y, color = int(self.evaluate(args[0])), int(self.evaluate(args[1])), args[2].lower()
@@ -48,23 +74,10 @@ class Interpreter:
         if color in colors:
             self.grid.set_color(x, y, colors[color])
 
-    def for_loop(self, args):
-        x1, x2, y1, y2 = map(int, map(self.evaluate, args[:4]))
-        block_commands = ' '.join(args[4:])[1:-1].strip()
-        for y in range(y1, y2 + 1):
-            for x in range(x1, x2 + 1):
-                self.execute_commands(block_commands)
-
     def if_statement(self, args):
         condition = args[0].lower()
         block_commands = ' '.join(args[1:])[1:-1].strip()
         if self.evaluate_condition(condition):
-            self.execute_commands(block_commands)
-
-    def while_loop(self, args):
-        condition = args[0].lower()
-        block_commands = ' '.join(args[1:])[1:-1].strip()
-        while self.evaluate_condition(condition):
             self.execute_commands(block_commands)
 
     def declare_int(self, args):
@@ -74,7 +87,8 @@ class Interpreter:
         self.variables[args[0]] = float(self.evaluate(args[1]))
 
     def declare_str(self, args):
-        self.variables[args[0]] = self.evaluate(args[1])
+        print(args)
+        self.variables[args[0]] = self.evaluate(" ".join(args[1::]))
 
     def declare_matrix(self, args):
         name = args[0]
@@ -95,6 +109,13 @@ class Interpreter:
         message = ' '.join(args)
         print(self.evaluate(message))
 
+    def evaluateMath(self, expression):
+        try:
+            return eval(expression, {}, self.variables)
+        except Exception as e:
+            print(f"Error evaluating expression '{expression}': {e}")
+            return expression
+
     def evaluate(self, expression):
         if expression.isdigit():
             return int(expression)
@@ -107,5 +128,8 @@ class Interpreter:
         return expression.strip('"')
 
     def evaluate_condition(self, condition):
-        # Simplificação: qualquer condição "true" será verdadeira
-        return condition == 'true'  # Deve ser melhorado para avaliar expressões reais
+        try:
+            return eval(condition, {}, self.variables)
+        except Exception as e:
+            print(f"Error evaluating condition '{condition}': {e}")
+            return False

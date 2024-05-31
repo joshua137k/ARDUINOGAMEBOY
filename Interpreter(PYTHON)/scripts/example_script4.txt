@@ -1,0 +1,8 @@
+# Declare variables
+INT a 5
+INT b 10
+
+# Conditional statement
+IF a < b {
+    PRINT "a is less than b"
+}

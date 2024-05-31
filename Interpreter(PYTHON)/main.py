@@ -7,7 +7,7 @@ class GameEngine:
     def __init__(self):
         self.width = 600
         self.height = 600
-        self.cell_size = 2
+        self.cell_size = 10
         self.grid = Grid(300, 300)
         self.interpreter = Interpreter(self.grid)
         self.colors = {
@@ -22,11 +22,12 @@ class GameEngine:
         pygame.init()
         screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption('2D Game Engine')
-
-        script_path = os.path.join('scripts', script_name)
+        
+        script_path = os.path.join(os.path.join("Interpreter(PYTHON)",'scripts'), script_name)
         self.interpreter.execute_script(script_path)
 
         running = True
+        
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -46,4 +47,4 @@ class GameEngine:
 
 if __name__ == "__main__":
     engine = GameEngine()
-    engine.run('example_script.txt')  # Você pode alterar o nome do script aqui
+    engine.run('example_script2.txt')  # Você pode alterar o nome do script aqui

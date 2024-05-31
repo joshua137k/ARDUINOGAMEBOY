@@ -1,0 +1,21 @@
+# Declare a matrix and a vector
+MATRIX mat 3 3
+VECTOR vec 3
+
+# Assign values to the matrix and vector
+mat[0][0] = 1
+mat[1][1] = 2
+mat[2][2] = 3
+
+vec[0] = 10
+vec[1] = 20
+vec[2] = 30
+
+# Print matrix and vector values
+PRINT mat[0][0]
+PRINT mat[1][1]
+PRINT mat[2][2]
+
+PRINT vec[0]
+PRINT vec[1]
+PRINT vec[2]

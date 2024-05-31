@@ -1,0 +1,9 @@
+# Exemplo de script com atribuições e loop while
+INT x 0
+INT y 0
+WHILE x < 10
+    PRINT "x: " x
+    SET x y red
+    x = x + 1
+    y = y + 1
+ENDWHILE

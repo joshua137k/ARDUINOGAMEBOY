@@ -1,0 +1,8 @@
+# Declare a variable
+INT counter 0
+
+# Loop while counter is less than 5
+WHILE counter < 5
+    PRINT counter
+    counter = counter + 1
+ENDWHILE
