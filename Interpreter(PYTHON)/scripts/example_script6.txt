@@ -1,0 +1,27 @@
+# Definindo variáveis
+INT x 10
+INT y 20
+
+# Definindo uma função que soma dois números e imprime o resultado
+FUNC add a b
+    INT result 0
+    result = a * b
+    PRINT "result:" result
+ENDFUNC
+
+# Chamando a função definida
+CALL add x y
+
+# Definindo uma função que muda a cor de uma célula na grade
+FUNC paint_cell x y color
+    SET x y color
+ENDFUNC
+
+# Chamando a função para mudar a cor de uma célula
+CALL paint_cell 1 2 red
+
+# Laço while simples
+WHILE x > 0
+    PRINT "x is: " x
+    x = x - 1
+ENDWHILE

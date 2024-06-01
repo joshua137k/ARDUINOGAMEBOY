@@ -6,5 +6,9 @@ INT b 10
 IF a < b
     PRINT "a is less than b"
     PRINT "OI"
+    IF b < a
+        PRINT "b>a"
+    ENDIF
+    PRINT "TOPSOM"
 ENDIF
 PRINT "TOP"
