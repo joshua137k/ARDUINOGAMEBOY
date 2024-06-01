@@ -108,6 +108,5 @@ To get started with the ESP32 2D Console Interpreter, follow these steps:
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
----
 
-With these detailed instructions and examples, you should be well on your way to creating and running custom scripts on your ESP32 2D console. Happy coding!
+
