@@ -28,7 +28,7 @@ class GameEngine:
         pygame.init()
         self.width = 600
         self.height = 600
-        self.cell_size = 5
+        self.cell_size = 20
         self.grid = Grid(300, 300)
         
         self.colors = {

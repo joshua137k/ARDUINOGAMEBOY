@@ -192,9 +192,7 @@ class Interpreter:
         try:
             return eval(expression, {}, self.variables)
         except:
-            if expression in self.variables:
-                return self.variables[expression]
-        return expression.strip('"')
+            return expression.strip('"')
 
     def get_matrix_value(self, args):
         matrix_name = args[0]
@@ -219,6 +217,7 @@ class Interpreter:
     def evaluate_condition(self, condition):
         try:
             condition = condition.replace("equals","==")
+            condition = condition.replace("notE","!=")
             condition = condition.replace("AND","and")
             condition = condition.replace("OR","or")
             return eval(condition, {}, self.variables)

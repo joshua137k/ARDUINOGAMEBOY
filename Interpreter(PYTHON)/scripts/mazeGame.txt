@@ -1,37 +1,29 @@
 # Definindo variáveis
 INT player_x 0
 INT player_y 0
+
+INT Aplayer_x 0
+INT Aplayer_y 0
+
 INT conf 0
 
-
 FUNC draw
-
     INT dx 0
     INT dy 0
     INT dmax 10
 
-
-
     WHILE dx < dmax
-
         dy = 0
-
         WHILE dy < dmax
             GETMATRIXVALUE maze dy dx v
             IF v equals 1
                 SET dx dy red
             ENDIF
-            
             dy = dy + 1
-
         ENDWHILE
-
         dx = dx + 1
-
     ENDWHILE
 ENDFUNC
-
-
 
 # Definindo o labirinto
 MATRIX maze 10 10
@@ -81,62 +73,78 @@ SETMATRIXVALUE maze 9 7 1
 SETMATRIXVALUE maze 9 8 1
 
 # Iniciando posição do jogador
-
 player_x = 0
 player_y = 0
+Aplayer_x = player_x
+Aplayer_y = player_y
 
 CALL draw
 
 # Loop principal do jogo
 WHILE player_x < 9 OR player_y < 9
-
     # Atualizando estado dos botões
     BTNSTATE LEFT btn_left
     BTNSTATE RIGHT btn_right
     BTNSTATE UP btn_up
     BTNSTATE DOWN btn_down
 
+    Aplayer_x = player_x
+    Aplayer_y = player_y
+    
+
     # Movendo o jogador
     IF btn_left equals True
-        GETMATRIXVALUE maze player_y player_x-1 cell_value
-        IF cell_value equals 0
-            player_x = player_x - 1
-            PRINT "Movendo para a esquerda"
+        IF player_x > 0
+            GETMATRIXVALUE maze player_y player_x-1 cell_value
+            IF cell_value equals 0
+                player_x = player_x - 1
+                PRINT "Movendo para a esquerda"
+            ENDIF
         ENDIF
     ENDIF
 
     IF btn_right equals True
-        GETMATRIXVALUE maze player_y player_x+1 cell_value
-        IF cell_value equals 0
-            player_x = player_x + 1
-            PRINT "Movendo para a direita"
+        IF player_x < 9
+            GETMATRIXVALUE maze player_y player_x+1 cell_value
+            IF cell_value equals 0
+                player_x = player_x + 1
+                PRINT "Movendo para a direita"
+            ENDIF
         ENDIF
     ENDIF
 
     IF btn_up equals True
-        GETMATRIXVALUE maze player_y-1 player_x cell_value
-        IF cell_value equals 0
-            player_y = player_y - 1
-            PRINT "Movendo para cima"
+        IF player_y > 0
+            GETMATRIXVALUE maze player_y-1 player_x cell_value
+            IF cell_value equals 0
+                player_y = player_y - 1
+                PRINT "Movendo para cima"
+            ENDIF
         ENDIF
     ENDIF
 
     IF btn_down equals True
-        GETMATRIXVALUE maze player_y+1 player_x cell_value
-        IF cell_value equals 0
-            player_y = player_y + 1
-            PRINT "Movendo para baixo"
+        IF player_y < 9
+            GETMATRIXVALUE maze player_y+1 player_x cell_value
+            IF cell_value equals 0
+                player_y = player_y + 1
+                PRINT "Movendo para baixo"
+            ENDIF
         ENDIF
     ENDIF
 
     # Configurando cor do jogador
     SET player_x player_y blue
 
-    # Incrementando contador de configuração
+    IF Aplayer_x notE player_x OR Aplayer_y notE player_y
+        SET Aplayer_x Aplayer_y white
+        PRINT Aplayer_x Aplayer_y
+    ENDIF
 
+    # Incrementando contador de configuração
     # Delay
-    WHILE conf<1000
-    conf = conf + 1
+    WHILE conf < 1000
+        conf = conf + 1
     ENDWHILE
     conf = 0
 
