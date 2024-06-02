@@ -1,4 +1,3 @@
-
 # ESP32 2D Console Interpreter
 
 A project to create a 2D console from scratch using ESP32 and the [`esp_8_bit_composite`](https://github.com/Roger-random/ESP_8_BIT_composite) library for video transmission.
@@ -10,12 +9,6 @@ A project to create a 2D console from scratch using ESP32 and the [`esp_8_bit_co
 - [Example Script](#example-script)
 - [Getting Started](#getting-started)
 - [Commands Reference](#commands-reference)
-  - [Variables](#variables)
-  - [Control Structures](#control-structures)
-  - [Input/Output](#inputoutput)
-  - [Functions](#functions)
-  - [Grid Manipulation](#grid-manipulation)
-  - [Matrix Operations](#matrix-operations)
 - [License](#license)
 
 ## Introduction
@@ -37,17 +30,7 @@ This project aims to create a 2D console using the ESP32 as an interpreter for c
 
 ## Example Script
 
-\`\`\`plaintext
-# Example script with assignments and while loop
-INT x 0
-INT y 0
-WHILE x < 10
-    PRINT "x: " x
-    SET x y red
-    x = x + 1
-    y = y + 1
-ENDWHILE
-\`\`\`
+For a comprehensive guide on writing scripts, refer to the [Guide to Language.md](Guide_to_Language.md).
 
 ## Getting Started
 
@@ -69,44 +52,8 @@ To get started with the ESP32 2D Console Interpreter, follow these steps:
 
 ## Commands Reference
 
-### Variables
-
-- `INT name value`: Declare an integer variable.
-- `FLOAT name value`: Declare a float variable.
-- `STR name value`: Declare a string variable.
-- `VECTOR name size`: Declare a vector of a given size.
-- `MATRIX name rows cols`: Declare a matrix with specified rows and columns.
-
-### Control Structures
-
-- `WHILE condition`: Begin a while loop.
-- `ENDWHILE`: End a while loop.
-- `IF condition`: Begin an if statement.
-- `ENDIF`: End an if statement.
-
-### Input/Output
-
-- `PRINT message`: Print a message.
-- `INPUT var_name`: Input a value into a variable.
-
-### Functions
-
-- `FUNC name param1 param2 ...`: Define a function.
-- `ENDFUNC`: End a function definition.
-- `CALL name arg1 arg2 ...`: Call a function with arguments.
-
-### Grid Manipulation
-
-- `SET x y color`: Set the color of a grid cell.
-
-### Matrix Operations
-
-- `GETMATRIXVALUE matrix_name row col var_name`: Get the value of a matrix cell.
-- `SETMATRIXVALUE matrix_name row col value`: Set the value of a matrix cell.
+For a detailed reference of all commands, variables, control structures, input/output functions, grid manipulation, and matrix operations, please refer to the [Guide to Language.md](guide_to_Language.md).
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-
-
