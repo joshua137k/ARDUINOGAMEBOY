@@ -33,7 +33,7 @@ This project aims to create a 2D console using the ESP32 as an interpreter for c
 To get started with the ESP32 2D Console Interpreter, follow these steps:
 
 1. **Set Up ESP32:**
-   - Flash the ESP32 with the necessary firmware using the `esp_8_bit_composite` library.
+   - Flash the ESP32 with the necessary code using the `RogerioBoy.ino`.
 
 2. **Connect Display and Inputs:**
    - Connect a composite video display to the ESP32.
