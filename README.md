@@ -6,7 +6,6 @@ A project to create a 2D console from scratch using ESP32 and the [`esp_8_bit_co
 
 - [Introduction](#introduction)
 - [Features](#features)
-- [Example Script](#example-script)
 - [Getting Started](#getting-started)
 - [Commands Reference](#commands-reference)
 - [License](#license)
@@ -28,9 +27,6 @@ This project aims to create a 2D console using the ESP32 as an interpreter for c
   - `up`: Button connected to the pin configured as `up`.
   - `down`: Button connected to the pin configured as `down`.
 
-## Example Script
-
-For a comprehensive guide on writing scripts, refer to the [Guide to Language.md](Guide_to_Language.md).
 
 ## Getting Started
 
