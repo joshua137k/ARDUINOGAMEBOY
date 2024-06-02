@@ -44,13 +44,7 @@ class GameEngine:
             Button(250, 500, 100, 50, self.colors['red'], "UP"),
             Button(370, 500, 100, 50, self.colors['red'], "DOWN")
         ]
-        self.btnsClick = {
-            "LEFT": False,
-            "RIGHT": False,
-            "UP": False,
-            "DOWN": False
-        }
-        self.interpreter = Interpreter(self.grid,self.btnsClick)
+        self.interpreter = Interpreter(self.grid)
 
     def run(self, script_name):
         
@@ -73,13 +67,11 @@ class GameEngine:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
                     for button in self.buttons:
-                        self.btnsClick[button.text]=button.is_clicked(pos)
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    for button in self.btnsClick:
-                        self.btnsClick[button]=False
+                        if button.is_clicked(pos):
+                            self.interpreter.call_BTNfunction([button.text,""])
 
 
-            self.interpreter.buttons = self.btnsClick
+
             screen.fill(self.colors['white'])
             self.draw_grid(screen)
             self.draw_buttons(screen)

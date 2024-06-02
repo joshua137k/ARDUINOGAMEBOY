@@ -3,40 +3,20 @@ INT x 0
 INT y 0
 INT loop 1
 INT conf 0
-# Laço while simples
-WHILE loop > 0
 
-    BTNSTATE LEFT btn1_state
-    BTNSTATE DOWN btn2_state
 
-    IF btn1_state equals True
+FUNC_BTNSTATE LEFT
+    x = x + 1
+    SET x y red
+    PRINT "Button 1 was clicked!"
+ENDBTNFUNC
 
-        IF conf > 400
-            SET x y red
-            x = x + 1
-            PRINT "Button 1 was clicked!"
-            conf = 0
-        ENDIF
 
-        conf = conf + 1
-
-    ENDIF
+FUNC_BTNSTATE DOWN
+    y = y + 1
+    SET x y red
+    PRINT "Button 1 was clicked!"
+ENDBTNFUNC
 
 
 
-    IF btn2_state equals True
-
-        IF conf > 400
-            SET x y red
-            y = y + 1
-            PRINT "Button 1 was clicked!"
-            conf = 0
-        ENDIF
-
-        conf = conf + 1
-
-    ENDIF
-
-    #PRINT "x is: " x
-    #
-ENDWHILE

@@ -1,9 +1,9 @@
 class Interpreter:
-    def __init__(self, grid,buttons):
+    def __init__(self, grid):
         self.grid = grid
-        self.buttons=buttons
         self.variables = {}
         self.functions = {}
+        self.btnFunctions = {}
         self.commands = {
             'SET': self.set_color,
             'IF': self.if_statement,
@@ -17,7 +17,7 @@ class Interpreter:
             'WHILE': self.while_loop,
             'FUNC': self.define_function,
             'CALL': self.call_function,
-            'BTNSTATE': self.btn_state,
+            'FUNC_BTNSTATE': self.btn_state,
             'GETMATRIXVALUE': self.get_matrix_value,
             'SETMATRIXVALUE': self.set_matrix_value
 
@@ -45,16 +45,24 @@ class Interpreter:
                 command = parts[0].upper()
                 args = parts[1:]
 
-                if command in ['WHILE', 'IF','FUNC']:
+                if command in ['WHILE', 'IF','FUNC','FUNC_BTNSTATE']:
                     i = self.commands[command](args, i, lines)
                 elif command in self.commands:
                     self.commands[command](args)
             i += 1
 
-    def btn_state(self, args):
-        button_name = args[0]
-        var_name = args[1]
-        self.variables[var_name] = self.buttons[button_name]
+    def btn_state(self, args,i,lines):
+        func_name = args[0]
+        parameters = args[1:]
+        block_commands = []
+        i+=1
+        while i < len(lines) and not lines[i].strip().startswith('ENDBTNFUNC'):
+            block_commands.append(lines[i])
+            i += 1
+        self.btnFunctions[func_name] = {'parameters': parameters, 'commands': '\n'.join(block_commands)}
+        
+        return i
+
 
     def while_loop(self, args, i, lines):
         condition = ' '.join(args)
@@ -250,6 +258,28 @@ class Interpreter:
             original_vars = self.variables.copy()
             self.variables.update(local_vars)
             self.execute_commands(func['commands'])
+            for i in self.variables:
+                if i in original_vars:
+                    original_vars[i]=self.variables[i]
+            self.variables = original_vars
+        else:
+            print(f"Function '{func_name}' not defined.")
+
+
+    def call_BTNfunction(self, args):
+        func_name = args[0]
+        arguments = args[1:]
+        if func_name in self.btnFunctions:
+            func = self.btnFunctions[func_name]
+            local_vars = {}
+            for param, arg in zip(func['parameters'], arguments):
+                local_vars[param] = self.evaluate(arg)
+            original_vars = self.variables.copy()
+            self.variables.update(local_vars)
+            self.execute_commands(func['commands'])
+            for i in self.variables:
+                if i in original_vars:
+                    original_vars[i]=self.variables[i]
             self.variables = original_vars
         else:
             print(f"Function '{func_name}' not defined.")
