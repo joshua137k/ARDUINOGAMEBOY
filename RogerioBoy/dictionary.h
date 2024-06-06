@@ -1,10 +1,7 @@
-// Dictionary.h
 #ifndef DICTIONARY_H
 #define DICTIONARY_H
 
 #include <Arduino.h>
-
-#define MAX_ITEMS 100
 
 enum ValueType {
   INT,
@@ -30,18 +27,23 @@ struct DictionaryItem {
 
 class Dictionary {
   private:
-    DictionaryItem items[MAX_ITEMS];
+    DictionaryItem* items;
     int numItems;
+    int maxItems;
 
   public:
-    Dictionary();
+    Dictionary(int maxItems = 100);
+    ~Dictionary();
 
     void addItem(const char* key, int value);
     void addItem(const char* key, float value);
     void addItem(const char* key, const char* value);
     void addItem(const char* key, int* value);
     void addItem(const char* key, int** value);
-    Value getValue(const char* key);
+    Value getValue(const char* key, ValueType &type);
+    String valueToString(Value value, ValueType type);
+    bool exists(const char* key);
+    void change(const char* key, Value newValue, ValueType newType);
 };
 
 #endif
