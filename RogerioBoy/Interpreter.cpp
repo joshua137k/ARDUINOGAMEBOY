@@ -2,25 +2,33 @@
 #include "Dictionary.h"
 #include "Interpreter.h"
 
-
 Dictionary variable(100);
+
+float getValueFromDict(const char* key) {
+    ValueType type;
+    Value value = variable.getValue(key, type);
+
+    switch (type) {
+        case INT:
+            return (float)value.intValue;
+        case FLOAT:
+            return value.floatValue;
+        default:
+            return 0.0; // Aqui podemos lançar um erro ou lidar de forma diferente
+    }
+}
 
 
 char* strip(char* str) {
     while (isspace(*str)) str++;
-
-    if (*str == 0)
-        return str;
-
+    if (*str == 0) return str;
     char* end = str + strlen(str) - 1;
     while (end > str && isspace(*end)) end--;
-
     *(end + 1) = '\0';
-
     return str;
 }
 
-int maxToken(char* str, char* delimit) {
+int maxToken(const char* str, char* delimit) {
     int count = 0;
     while (*str) {
         if (*str == *delimit) {
@@ -31,7 +39,7 @@ int maxToken(char* str, char* delimit) {
     return count + 1;
 }
 
-char** split(char* str, char* delimit, int* num_token) {
+char** split(const char* str, char* delimit, int* num_token) {
     char* str_copy = strdup(str);
     int token_count = maxToken(str, delimit);
     *num_token = token_count;
@@ -47,51 +55,31 @@ char** split(char* str, char* delimit, int* num_token) {
         index++;
         token = strtok(NULL, delimit);
     }
-
     free(str_copy);
     return parts;
 }
 
 float evaluateMath(const char* expression) {
-    // Suporta operações básicas: +, -, *, /
     char* expr_copy = strdup(expression);
     char* token = strtok(expr_copy, " ");
     float result = 0.0;
     char last_op = '+';
     while (token != NULL) {
-        // Se o token é um operador, atualiza last_op
         if (strcmp(token, "+") == 0 || strcmp(token, "-") == 0 || strcmp(token, "*") == 0 || strcmp(token, "/") == 0) {
             last_op = token[0];
         } else {
-            // Se o token é um número ou uma variável, converte para float
             float value;
             ValueType type;
             if (variable.exists(token)) {
-                Value var_value = variable.getValue(token, type);
-                switch (type) {
-                    case INT:
-                        value = (float) var_value.intValue;
-                        break;
-                    case FLOAT:
-                        value = var_value.floatValue;
-                        break;
-                }
+                value =getValueFromDict(token);
             } else {
                 value = atof(token);
             }
             switch (last_op) {
-                case '+':
-                    result += value;
-                    break;
-                case '-':
-                    result -= value;
-                    break;
-                case '*':
-                    result *= value;
-                    break;
-                case '/':
-                    result /= value;
-                    break;
+                case '+': result += value; break;
+                case '-': result -= value; break;
+                case '*': result *= value; break;
+                case '/': result /= value; break;
             }
         }
         token = strtok(NULL, " ");
@@ -100,19 +88,92 @@ float evaluateMath(const char* expression) {
     return result;
 }
 
-int btn_state(const char** args, int i, const char** lines,int partNumber,int num_tokens) {
+bool compareValues(float leftValue, const char* op, float rightValue) {
+    if (strcmp(op, ">") == 0) return leftValue > rightValue;
+    if (strcmp(op, "<") == 0) return leftValue < rightValue;
+    if (strcmp(op, ">=") == 0) return leftValue >= rightValue;
+    if (strcmp(op, "<=") == 0) return leftValue <= rightValue;
+    if (strcmp(op, "==") == 0) return leftValue == rightValue;
+    if (strcmp(op, "!=") == 0) return leftValue != rightValue;
+    return false;
+}
+
+
+bool evaluate_condition(const char** condition, int partNumber) {
+    float leftValue = 0;
+    float rightValue = 0;
+    const char* op = nullptr;
+    bool logicalAnd = true;  // default to AND operation if none specified
+
+    for (int i = 0; i < partNumber-1; i++) {
+        if (strcmp(condition[i], "and") == 0) {
+            logicalAnd = true;
+        } else if (strcmp(condition[i], "or") == 0) {
+            logicalAnd = false;
+        } else if (i % 4 == 0) {  // this should be the left value or a variable
+            if (variable.exists(condition[i])) {
+                leftValue = getValueFromDict(condition[i]);
+            } else {
+                leftValue = atof(condition[i]);
+            }
+        } else if (i % 4 == 1) {  // this should be the operator
+            op = condition[i];
+        } else if (i % 4 == 2) {  // this should be the right value or a variable
+            if (variable.exists(condition[i])) {
+                rightValue = getValueFromDict( condition[i]);
+            } else {
+                rightValue = atof(condition[i]);
+            }
+
+            // Evaluate the expression
+            bool result = compareValues(leftValue, op, rightValue);
+            if (logicalAnd) {
+                if (!result) return false;  // AND operation, if any false, return false
+            } else {
+                if (result) return true;  // OR operation, if any true, return true
+            }
+        }
+    }
+    return logicalAnd;  // if all AND conditions passed, return true
+}
+
+int btn_state(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
     Serial.print("Button state with args: ");
     Serial.println(args[0]);  // Print the first argument
-    return i++;
+    return i + 1;
 }
 
-int while_loop(const char** args, int i, const char** lines,int partNumber,int num_tokens) {
-    Serial.println("While loop with args: ");
-    return i++;
+int while_loop(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
+    String block_commands = "";
+    int nested_w = 0;
+    i++;
+
+    // Encontrar o bloco de comandos dentro do while
+    while (i < num_tokens) {
+        char* current_line = strip((char*)lines[i]);
+        if (strncmp(current_line, "WHILE", 5) == 0) {  // Corrige a comparação para "WHILE"
+            nested_w++;
+        } else if (strncmp(current_line, "ENDWHILE", 8) == 0) {  // Corrige a comparação para "ENDWHILE"
+            if (nested_w == 0) {
+                break;
+            }
+            nested_w--;
+        }
+        block_commands += String(strip((char*)lines[i])) + "\n";
+        i++;
+    }
+
+    // Executar o bloco de comandos repetidamente enquanto a condição for verdadeira
+    while (evaluate_condition(args, partNumber)) {
+        execute_commands(block_commands.c_str());
+    }
+
+    // Retornar o índice do fim do bloco while
+    return i;
 }
+
 
 void handle_assignment(const char* line) {
-    // Divida a linha em nome da variável e expressão
     char* line_copy = strdup(line);
     char* var_name = strtok(line_copy, "=");
     char* expression = strtok(NULL, "=");
@@ -120,45 +181,60 @@ void handle_assignment(const char* line) {
     if (var_name && expression) {
         var_name = strip(var_name);
         expression = strip(expression);
-        
-        // Avalie a expressão
         float value = evaluateMath(expression);
         ValueType type;
-        Value v = variable.getValue(var_name, type); 
-          switch(type) {
+        Value v = variable.getValue(var_name, type);
+        
+        switch (type) {
             case INT:
-                v.intValue=(int)value;
-                variable.change(var_name,v,type);
+                v.intValue = (int)value;
+                variable.change(var_name, v, type);
                 break;
             case FLOAT:
-                v.floatValue=value;
-                variable.change(var_name,v,type);
+                v.floatValue = value;
+                variable.change(var_name, v, type);
                 break;
-
         }
-        
     }
-    
     free(line_copy);
 }
 
-void set_color(const char** args,int partNumber) {
+void set_color(const char** args, int partNumber) {
     Serial.print("Set color with args: ");
+    Serial.println(args[0]);
 }
 
-int if_statement(const char** args, int i, const char** lines,int partNumber,int num_tokens) {
-    Serial.print("If statement with args: ");
-    return i++;
-}
+int if_statement(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
+    String block_commands = "";
+    int nested_ifs = 0;
+    i++;
 
-void input_var(const char** args,int partNumber) {
-    Serial.print("Input variable with args: ");
+    while (i < num_tokens) {
+        char* current_line = strip((char*)lines[i]);
+        if (strncmp(current_line, "IF", 2) == 0) {
+            nested_ifs++;
+        } else if (strncmp(current_line, "ENDIF", 5) == 0) {
+            if (nested_ifs == 0) {
+                break;
+            }
+            nested_ifs--;
+        }
+        block_commands += String(strip((char*)lines[i])) + "\n";
+        i++;
+    }
+
+    if (evaluate_condition(args, partNumber)) {
+        execute_commands(block_commands.c_str());
+    }
+
+    return i;
 }
 
 void print_message(const char** args, int partNumber) {
     String message = "";
     bool is_str = false;
-    partNumber--;
+    //partNumber--;
+    
     for (int i = 0; i < partNumber; i++) {
         String arg = String(args[i]);
         
@@ -177,85 +253,74 @@ void print_message(const char** args, int partNumber) {
             message += arg + " ";
         } else {
             ValueType type;
-            Value value = variable.getValue(arg.c_str(), type); 
+            Value value = variable.getValue(arg.c_str(), type);
             message += variable.valueToString(value, type);
         }
     }
 
-    Serial.println(message);
+    Serial.println("SERIAL.PRINT: "+message);
 }
 
-void get_matrix_value(const char** args,int partNumber) {
+void get_matrix_value(const char** args, int partNumber) {
     Serial.print("Get matrix value with args: ");
+    Serial.println(args[0]);
 }
 
-void set_matrix_value(const char** args,int partNumber) {
+void set_matrix_value(const char** args, int partNumber) {
     Serial.print("Set matrix value with args: ");
+    Serial.println(args[0]);
 }
 
-int define_function(const char** args, int i, const char** lines,int partNumber,int num_tokens) {
+int define_function(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
     Serial.print("Define function with args: ");
-    return i++;
+    Serial.println(args[0]);
+    return i + 1;
 }
 
-void call_function(const char** args,int partNumber) {
+void call_function(const char** args, int partNumber) {
     Serial.print("Call function with args: ");
+    Serial.println(args[0]);
 }
 
-void call_BTNfunction(const char** args,int partNumber) {
+void call_BTNfunction(const char** args, int partNumber) {
     Serial.print("Call button function with args: ");
+    Serial.println(args[0]);
 }
 
-void declare_int(const char** args,int partNumber) {
-
+void declare_int(const char** args, int partNumber) {
     variable.addItem(args[0], atoi(args[1]));
-
 }
 
-void declare_float(const char** args,int partNumber) {
+void declare_float(const char** args, int partNumber) {
     variable.addItem(args[0], (float)atof(args[1]));
-
 }
 
-void declare_str(const char** args,int partNumber) {
-    variable.addItem(args[0], atoi(args[1]));
-
+void declare_str(const char** args, int partNumber) {
+    variable.addItem(args[0], args[1]);
 }
 
-void declare_matrix(const char** args,int partNumber) {
+void declare_matrix(const char** args, int partNumber) {
     int rows = atoi(args[1]);
     int cols = atoi(args[2]);
-
     int** matrix = new int*[rows];
     for (int i = 0; i < rows; i++) {
         matrix[i] = new int[cols];
     }
-
     variable.addItem(args[0], matrix);
-
 }
 
-void declare_vector(const char** args,int partNumber) {
-    int* i =new int[atoi(args[1])];
-    variable.addItem(args[0], &i);
-
+void declare_vector(const char** args, int partNumber) {
+    int* vec = new int[atoi(args[1])];
+    variable.addItem(args[0], vec);
 }
 
-void evaluate(const char** expression,int partNumber) {
-
+void evaluate(const char** expression, int partNumber) {
     Serial.print("Evaluate expression: ");
+    Serial.println(expression[0]);
 }
-
-void evaluate_condition(const char** condition,int partNumber) {
-    Serial.print("Evaluate condition: ");
-}
-
-
-
 
 const char* commandNames[] = {
     "SET",
-    "INPUT",
     "PRINT",
     "GETMATRIXVALUE",
     "SETMATRIXVALUE",
@@ -270,37 +335,31 @@ const char* commandNames[] = {
 Command commands[] = {
     {"FUNC_BTNSTATE", btn_state, NULL},
     {"WHILE", while_loop, NULL},
-    {"SET", NULL, set_color},
-    {"IF", if_statement, NULL},
-    {"INPUT", NULL, input_var},
-    {"PRINT", NULL, print_message},
+    {"SET", NULL, set_color},//OK
+    {"IF", if_statement, NULL},//OK
+    {"PRINT", NULL, print_message},//OK
     {"GETMATRIXVALUE", NULL, get_matrix_value},
     {"SETMATRIXVALUE", NULL, set_matrix_value},
     {"FUNC", define_function, NULL},
     {"CALL", NULL, call_function},
-    {"INT", NULL, declare_int},
-    {"FLOAT", NULL, declare_float},
-    {"STR", NULL, declare_str},
-    {"MATRIX", NULL, declare_matrix},
-    {"VECTOR", NULL, declare_vector}
+    {"INT", NULL, declare_int},//OK
+    {"FLOAT", NULL, declare_float},//OK
+    {"STR", NULL, declare_str},//OK
+    {"MATRIX", NULL, declare_matrix},//OK
+    {"VECTOR", NULL, declare_vector}//OK
 };
 
-
-
-
-
-int callFunctionByNameINT(const char* command_name, const char** args, int i, const char** lines,int partNumber,int num_tokens) {
+int callFunctionByNameINT(const char* command_name, const char** args, int i, const char** lines, int partNumber, int num_tokens) {
     for (int j = 0; j < sizeof(commands) / sizeof(Command); j++) {
         if (strcmp(commands[j].name, command_name) == 0) {
             if (commands[j].runFuncInt != NULL) {
-                 
                 return commands[j].runFuncInt(args, i, lines, partNumber, num_tokens);
             } else {
-                printf("Função com três parâmetros não encontrada para o comando: %s\n", command_name);
+                Serial.printf("Função com três parâmetros não encontrada para o comando: %s\n", command_name);
             }
         }
     }
-    printf("Comando não encontrado: %s\n", command_name);
+    Serial.printf("Comando não encontrado: %s\n", command_name);
     return -1;
 }
 
@@ -308,15 +367,14 @@ void callFunctionByName(const char* command_name, const char** args, int partNum
     for (int j = 0; j < sizeof(commands) / sizeof(Command); j++) {
         if (strcmp(commands[j].name, command_name) == 0) {
             if (commands[j].runFuncVoid != NULL) {
-                
-                commands[j].runFuncVoid(args,partNumber);
+                commands[j].runFuncVoid(args, partNumber);
             } else {
-                printf("Função com um parâmetro não encontrada para o comando: %s\n", command_name);
+                Serial.printf("Função com um parâmetro não encontrada para o comando: %s\n", command_name);
             }
             return;
         }
     }
-    printf("Comando não encontrado: %s\n", command_name);
+    Serial.printf("Comando não encontrado: %s\n", command_name);
 }
 
 bool isCommand(const char* n) {
@@ -328,51 +386,51 @@ bool isCommand(const char* n) {
     return false;
 }
 
-
-void execute_commands(char* commands) {
-    Serial.println(commands);
+void execute_commands(const char* commands) {
+    
 
     int num_tokens;
     char** p = split(commands, "\n", &num_tokens);
-    for (int i = 0; i < num_tokens - 2; i++) {
+    for (int i = 0; i < num_tokens -1; i++) {
+        
         char* line = strip(p[i]);
         if (line == NULL || line[0] == '\0' || line[0] == '#') {
             continue;
         }
-        //Serial.println(line);
+
         if (strstr(line, "=") != NULL) {
             handle_assignment(line);
         } else {
             int partNumber;
             char** part = split(line, " ", &partNumber);
             char* command = part[0];
-            char** args = new char*[partNumber];
+            char** args = new char*[partNumber - 1];
 
             for (int kk = 1; kk < partNumber; kk++) {
-
                 args[kk - 1] = part[kk];
             }
 
-           
-
             if (strcmp(command, "WHILE") == 0 || strcmp(command, "IF") == 0 || strcmp(command, "FUNC") == 0 || strcmp(command, "FUNC_BTNSTATE") == 0) {
-                i = callFunctionByNameINT(command, (const char**)args, i, (const char**)p,partNumber,num_tokens);
+                i = callFunctionByNameINT(command, (const char**)args, i, (const char**)p, partNumber, num_tokens);
             } else {
                 if (isCommand(command)) {
-                    callFunctionByName(command, (const char**)args,partNumber);
+                    callFunctionByName(command, (const char**)args, partNumber - 1);
                 }
             }
+            
             free(part);
-            free(args);
+        
+            delete[] args;
         }
     }
-
     free(p);
 }
 
 void execute_script(const char* script_path) {
-    char* code =
+    const char* code =
         "INT x 0\n"
+        "INT a 5\n"
+        "INT b 10\n"
         "FLOAT y 0.0\n"
         "STR name 'John'\n"
         "MATRIX mat 3 3\n"
@@ -380,12 +438,19 @@ void execute_script(const char* script_path) {
         "# Declare the variable\n"
         "INT counter 0\n"
         "\n"
+        "IF b > a\n"
+        "    PRINT 'b>a'\n"
+        "ENDIF\n"
         "# Loop while counter is less than 5\n"
         "WHILE counter < 5\n"
         "    PRINT 'counter:' counter\n"
         "    counter = counter + 1\n"
         "    PRINT 'Next counter:' counter\n" 
         "ENDWHILE\n"
-        "PRINT 'END'\n";
+        "PRINT 'END'";
+
+    Serial.println("----------------------\n");
+    Serial.println(code);
+    Serial.println("----------------------\n");
     execute_commands(code);
 }
