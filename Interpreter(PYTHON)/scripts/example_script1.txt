@@ -3,10 +3,7 @@ INT user_int 0
 FLOAT user_float 0.0
 STR user_str ""
 
-# Get user input
-INPUT user_int
-INPUT user_float
-INPUT user_str
+
 
 # Print user input
 PRINT user_int

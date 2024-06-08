@@ -12,7 +12,7 @@ Welcome to the captivating world of our custom scripting language. This guide wi
   - [Functions](#functions)
   - [Built-in Functions](#built-in-functions)
 - [Example Scripts](#example-scripts)
-  - [User Input and Printing](#example-1-user-input-and-printing)
+  - [User Printing](#example-1-user-printing)
   - [Matrix and Vector Operations](#example-2-matrix-and-vector-operations)
   - [Conditional and Loops](#example-3-conditional-and-loops)
   - [Functions](#example-4-functions)
@@ -102,7 +102,6 @@ CALL add 5 10
 The built-in functions are the essential tools in our scripting crucible, providing ready-made operations to simplify your coding journey.
 
 - `PRINT`: Outputs a message or variable to the console.
-- `INPUT`: Takes input from the user.
 - `SET`: Sets a value in a matrix or changes the color in a graphical application.
 - `GETMATRIXVALUE`: Retrieves a value from a matrix.
 - `SETMATRIXVALUE`: Sets a value in a matrix.
@@ -111,25 +110,22 @@ The built-in functions are the essential tools in our scripting crucible, provid
 
 ```plaintext
 PRINT "Hello, World!"
-INPUT user_input
 SET x y red
 GETMATRIXVALUE matrix i j value
 ```
 
 ## Example Scripts
 
-### Example 1: User Input and Printing
+### Example 1: User  Printing
 
-Embark on your journey with a simple script to gather and print user input.
+Embark on your journey with a simple script to gather and print.
 
 ```plaintext
 INT user_int 0
 FLOAT user_float 0.0
 STR user_str ""
 
-INPUT user_int
-INPUT user_float
-INPUT user_str
+
 
 PRINT user_int
 PRINT user_float

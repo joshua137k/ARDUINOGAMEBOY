@@ -1,8 +1,26 @@
 #include <Arduino.h>
-#include "Dictionary.h"
 #include "Interpreter.h"
+#include "video_display.h"
+
 
 Dictionary variable(100);
+
+#include <stdint.h>
+
+const uint8_t colors[] = {
+    0x00, // Preto (se precisar do valor para preto)
+    0x03, // Azul
+    0x1C, // Verde
+    0x1F, // Ciano
+    0xE0, // Vermelho
+    0xE3, // Magenta
+    0xFC, // Amarelo
+    0xFF  // Branco
+};
+
+void updateFrame() {
+    videoOut.waitForFrame();
+}
 
 float getValueFromDict(const char* key) {
     ValueType type;
@@ -202,6 +220,17 @@ void handle_assignment(const char* line) {
 void set_color(const char** args, int partNumber) {
     Serial.print("Set color with args: ");
     Serial.println(args[0]);
+    // 3 args x,y,color
+    uint8_t color = colors[0];
+    if (strcmp(args[2],"red")==0){ color = colors[4];}
+    int x = (int)getValueFromDict(args[0]); 
+    int y=(int)getValueFromDict(args[1]);
+    setPixel(x, y, color); 
+    
+
+    
+
+    
 }
 
 int if_statement(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
@@ -388,10 +417,11 @@ bool isCommand(const char* n) {
 
 void execute_commands(const char* commands) {
     
-
+    
     int num_tokens;
     char** p = split(commands, "\n", &num_tokens);
     for (int i = 0; i < num_tokens -1; i++) {
+       
         
         char* line = strip(p[i]);
         if (line == NULL || line[0] == '\0' || line[0] == '#') {
@@ -404,49 +434,54 @@ void execute_commands(const char* commands) {
             int partNumber;
             char** part = split(line, " ", &partNumber);
             char* command = part[0];
-            char** args = new char*[partNumber - 1];
 
-            for (int kk = 1; kk < partNumber; kk++) {
-                args[kk - 1] = part[kk];
+
+            if (strcmp(command,"UPDATEFRAME")==0){
+                updateFrame();
             }
+            else{
 
-            if (strcmp(command, "WHILE") == 0 || strcmp(command, "IF") == 0 || strcmp(command, "FUNC") == 0 || strcmp(command, "FUNC_BTNSTATE") == 0) {
-                i = callFunctionByNameINT(command, (const char**)args, i, (const char**)p, partNumber, num_tokens);
-            } else {
-                if (isCommand(command)) {
-                    callFunctionByName(command, (const char**)args, partNumber - 1);
+
+                char** args = new char*[partNumber - 1];
+
+                for (int kk = 1; kk < partNumber; kk++) {
+                    args[kk - 1] = part[kk];
                 }
+
+                if (strcmp(command, "WHILE") == 0 || strcmp(command, "IF") == 0 || strcmp(command, "FUNC") == 0 || strcmp(command, "FUNC_BTNSTATE") == 0) {
+                    i = callFunctionByNameINT(command, (const char**)args, i, (const char**)p, partNumber, num_tokens);
+                } else {
+                    if (isCommand(command)) {
+                        callFunctionByName(command, (const char**)args, partNumber - 1);
+                    }
+                }
+                
+                delete[] args;
             }
-            
             free(part);
         
-            delete[] args;
+            
         }
     }
     free(p);
 }
 
 void execute_script(const char* script_path) {
+
+
+    updateFrame();
     const char* code =
-        "INT x 0\n"
-        "INT a 5\n"
-        "INT b 10\n"
-        "FLOAT y 0.0\n"
-        "STR name 'John'\n"
-        "MATRIX mat 3 3\n"
-        "VECTOR vec 3\n"
+        "INT x 50\n"
+        "INT y 50\n"
         "# Declare the variable\n"
-        "INT counter 0\n"
-        "\n"
-        "IF b > a\n"
-        "    PRINT 'b>a'\n"
-        "ENDIF\n"
         "# Loop while counter is less than 5\n"
-        "WHILE counter < 5\n"
-        "    PRINT 'counter:' counter\n"
-        "    counter = counter + 1\n"
-        "    PRINT 'Next counter:' counter\n" 
+        "WHILE x < 100\n"
+        "    PRINT 'x:' x\n"
+        "    x = x + 1\n"
+        "    y = y + 1\n"
+        "    SET x y red\n"
         "ENDWHILE\n"
+        "UPDATEFRAME\n"
         "PRINT 'END'";
 
     Serial.println("----------------------\n");
@@ -454,3 +489,6 @@ void execute_script(const char* script_path) {
     Serial.println("----------------------\n");
     execute_commands(code);
 }
+
+
+
