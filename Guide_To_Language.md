@@ -1,10 +1,8 @@
 
 # Custom Scripting Language
 
-Welcome to the captivating world of our custom scripting language. This guide will delve into the intricacies of the language, revealing its kaleidoscopic potential for creating vivid and complex scripts. As you embark on this journey, you will learn about the verdant syntax that intertwines variables, functions, and logic into a beautiful mosaic of code.
 
 ## Table of Contents
-- [Getting Started](#getting-started)
 - [Syntax Overview](#syntax-overview)
   - [Variables](#variables)
   - [Conditional Statements](#conditional-statements)
@@ -17,14 +15,6 @@ Welcome to the captivating world of our custom scripting language. This guide wi
   - [Conditional and Loops](#example-3-conditional-and-loops)
   - [Functions](#example-4-functions)
   - [Maze Game](#example-5-maze-game)
-
-## Getting Started
-
-To transcend the ordinary and delve into scripting with this language, follow these steps:
-
-1. Ensure you have the Arduino IDE installed on your system.
-2. Place your script files in the same directory as the Arduino project.
-3. Upload the Arduino project to your board and run it with your script file as input.
 
 ## Syntax Overview
 
