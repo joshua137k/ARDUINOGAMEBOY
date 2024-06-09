@@ -1,5 +1,5 @@
 # ESP32 2D Console Interpreter
-
+<img src="icon.webp" alt="ROGERIOBOY" width="250"/>
 A project to create a 2D console from scratch using ESP32 and the [`esp_8_bit_composite`](https://github.com/Roger-random/ESP_8_BIT_composite) library for video transmission.
 
 ## Index

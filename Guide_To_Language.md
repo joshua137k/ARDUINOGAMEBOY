@@ -1,6 +1,6 @@
 
 # Custom Scripting Language
-![ROGERIOBOY](icon.webp)
+
 
 ## Table of Contents
 - [Syntax Overview](#syntax-overview)
