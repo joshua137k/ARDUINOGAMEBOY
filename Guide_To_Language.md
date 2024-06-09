@@ -22,13 +22,9 @@ Welcome to the captivating world of our custom scripting language. This guide wi
 
 To transcend the ordinary and delve into scripting with this language, follow these steps:
 
-1. Ensure you have Python installed on your system.
-2. Place your script files in the same directory as the interpreter.
-3. Run the interpreter with your script file as an argument:
-
-```bash
-python interpreter.py your_script.txt
-```
+1. Ensure you have the Arduino IDE installed on your system.
+2. Place your script files in the same directory as the Arduino project.
+3. Upload the Arduino project to your board and run it with your script file as input.
 
 ## Syntax Overview
 
@@ -102,21 +98,25 @@ CALL add 5 10
 The built-in functions are the essential tools in our scripting crucible, providing ready-made operations to simplify your coding journey.
 
 - `PRINT`: Outputs a message or variable to the console.
-- `SET`: Sets a value in a matrix or changes the color in a graphical application.
+- `SET`: Draws a square on the display with specified coordinates, size, and color.
 - `GETMATRIXVALUE`: Retrieves a value from a matrix.
 - `SETMATRIXVALUE`: Sets a value in a matrix.
+- `CLEAN`: Clears the screen.
+- `DELAY`: Pauses the execution for a specified time.
 
 **Example:**
 
 ```plaintext
 PRINT "Hello, World!"
-SET x y red
+SET 10 20 5 red
 GETMATRIXVALUE matrix i j value
+CLEAN
+DELAY 1000
 ```
 
 ## Example Scripts
 
-### Example 1: User  Printing
+### Example 1: User Printing
 
 Embark on your journey with a simple script to gather and print.
 
@@ -124,8 +124,6 @@ Embark on your journey with a simple script to gather and print.
 INT user_int 0
 FLOAT user_float 0.0
 STR user_str ""
-
-
 
 PRINT user_int
 PRINT user_float
@@ -209,11 +207,10 @@ FUNC_BTNSTATE LEFT
             player_x = player_x - 1
         ENDIF
     ENDIF
-    SET player_x player_y blue
+    SET player_x player_y 1 blue
 ENDBTNFUNC
 
 # Define other button states...
 
 PRINT "Game initialized!"
 ```
-
