@@ -18,22 +18,24 @@ const uint8_t colors[] = {
     0xFF  // Branco
 };
 
-void updateFrame() {
-    videoOut.waitForFrame();
-}
+
 
 float getValueFromDict(const char* key) {
-    ValueType type;
-    Value value = variable.getValue(key, type);
-
-    switch (type) {
-        case INT:
-            return (float)value.intValue;
-        case FLOAT:
-            return value.floatValue;
-        default:
-            return 0.0; // Aqui podemos lançar um erro ou lidar de forma diferente
+    if (variable.exists(key)) {
+        ValueType type;
+        Value value = variable.getValue(key, type);
+        switch (type) {
+            case INT:
+                return (float)value.intValue;
+            case FLOAT:
+                return value.floatValue;
+            default:
+                return 0.0; // Aqui podemos lançar um erro ou lidar de forma diferente
+        }
+    } else {
+        return atof(key);
     }
+
 }
 
 
@@ -86,13 +88,8 @@ float evaluateMath(const char* expression) {
         if (strcmp(token, "+") == 0 || strcmp(token, "-") == 0 || strcmp(token, "*") == 0 || strcmp(token, "/") == 0) {
             last_op = token[0];
         } else {
-            float value;
-            ValueType type;
-            if (variable.exists(token)) {
-                value =getValueFromDict(token);
-            } else {
-                value = atof(token);
-            }
+            float value = getValueFromDict(token);;
+            
             switch (last_op) {
                 case '+': result += value; break;
                 case '-': result -= value; break;
@@ -155,11 +152,30 @@ bool evaluate_condition(const char** condition, int partNumber) {
     return logicalAnd;  // if all AND conditions passed, return true
 }
 
+
+
+
+
+void cleanScreen(const char** args, int partNumber) {
+    clean();
+}
+
+void timedelay(const char** args, int partNumber) {
+    int t = atoi(args[0]);
+    delay(t);
+
+}
+
+
+
+
 int btn_state(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
     Serial.print("Button state with args: ");
     Serial.println(args[0]);  // Print the first argument
     return i + 1;
 }
+
+
 
 int while_loop(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
     String block_commands = "";
@@ -218,14 +234,17 @@ void handle_assignment(const char* line) {
 }
 
 void set_color(const char** args, int partNumber) {
-    Serial.print("Set color with args: ");
-    Serial.println(args[0]);
-    // 3 args x,y,color
+
+    // 4 args x,y,size,color
     uint8_t color = colors[0];
-    if (strcmp(args[2],"red")==0){ color = colors[4];}
+    if (strcmp(args[3],"red")==0){ color = colors[4];}
     int x = (int)getValueFromDict(args[0]); 
     int y=(int)getValueFromDict(args[1]);
-    setPixel(x, y, color); 
+    int size=(int)getValueFromDict(args[2]);
+
+    videoOut.waitForFrame();
+    drawSquare(x,y,size,color);
+    
     
 
     
@@ -349,21 +368,23 @@ void evaluate(const char** expression, int partNumber) {
 }
 
 const char* commandNames[] = {
-    "SET",
-    "PRINT",
-    "GETMATRIXVALUE",
-    "SETMATRIXVALUE",
-    "CALL",
-    "INT",
-    "FLOAT",
-    "STR",
-    "MATRIX",
-    "VECTOR"
+    "SET", // COOLOCAR QUADRADO NA TELA (X,Y,SIZE,COLOR)
+    "PRINT", // DAR PRINT NO TERMINAL
+    "GETMATRIXVALUE", // PEGAR ELEMENTO DE UMA MATRIZ
+    "SETMATRIXVALUE",// SETAR ELEMENTO DE UMA MATRIZ
+    "CALL", // CHAMAR FUNÇÂO
+    "INT", // DECLARAR UM INT
+    "FLOAT",// DECLARAR UM FLOAT
+    "STR",// DECLARAR UM STR
+    "MATRIX",// DECLARAR UM MATRIX
+    "VECTOR",// DECLARAR UM VECTOR
+    "CLEAN", //LIMPAR TELA
+    "DELAY"// FAZ UMA PAUSA
 };
 
 Command commands[] = {
     {"FUNC_BTNSTATE", btn_state, NULL},
-    {"WHILE", while_loop, NULL},
+    {"WHILE", while_loop, NULL},//ok
     {"SET", NULL, set_color},//OK
     {"IF", if_statement, NULL},//OK
     {"PRINT", NULL, print_message},//OK
@@ -375,7 +396,10 @@ Command commands[] = {
     {"FLOAT", NULL, declare_float},//OK
     {"STR", NULL, declare_str},//OK
     {"MATRIX", NULL, declare_matrix},//OK
-    {"VECTOR", NULL, declare_vector}//OK
+    {"VECTOR", NULL, declare_vector},//OK
+    {"CLEAN",NULL,cleanScreen},//OK
+    {"DELAY",NULL,timedelay} //OK
+    
 };
 
 int callFunctionByNameINT(const char* command_name, const char** args, int i, const char** lines, int partNumber, int num_tokens) {
@@ -434,31 +458,23 @@ void execute_commands(const char* commands) {
             int partNumber;
             char** part = split(line, " ", &partNumber);
             char* command = part[0];
+            char** args = new char*[partNumber - 1];
 
-
-            if (strcmp(command,"UPDATEFRAME")==0){
-                updateFrame();
+            for (int kk = 1; kk < partNumber; kk++) {
+                args[kk - 1] = part[kk];
             }
-            else{
 
-
-                char** args = new char*[partNumber - 1];
-
-                for (int kk = 1; kk < partNumber; kk++) {
-                    args[kk - 1] = part[kk];
+            if (strcmp(command, "WHILE") == 0 || strcmp(command, "IF") == 0 || strcmp(command, "FUNC") == 0 || strcmp(command, "FUNC_BTNSTATE") == 0) {
+                i = callFunctionByNameINT(command, (const char**)args, i, (const char**)p, partNumber, num_tokens);
+            } else {
+                if (isCommand(command)) {
+                    callFunctionByName(command, (const char**)args, partNumber - 1);
                 }
-
-                if (strcmp(command, "WHILE") == 0 || strcmp(command, "IF") == 0 || strcmp(command, "FUNC") == 0 || strcmp(command, "FUNC_BTNSTATE") == 0) {
-                    i = callFunctionByNameINT(command, (const char**)args, i, (const char**)p, partNumber, num_tokens);
-                } else {
-                    if (isCommand(command)) {
-                        callFunctionByName(command, (const char**)args, partNumber - 1);
-                    }
-                }
-                
-                delete[] args;
             }
-            free(part);
+            
+            delete[] args;
+        
+        free(part);
         
             
         }
@@ -467,27 +483,14 @@ void execute_commands(const char* commands) {
 }
 
 void execute_script(const char* script_path) {
-
-
-    updateFrame();
-    const char* code =
-        "INT x 50\n"
-        "INT y 50\n"
-        "# Declare the variable\n"
-        "# Loop while counter is less than 5\n"
-        "WHILE x < 100\n"
-        "    PRINT 'x:' x\n"
-        "    x = x + 1\n"
-        "    y = y + 1\n"
-        "    SET x y red\n"
-        "ENDWHILE\n"
-        "UPDATEFRAME\n"
-        "PRINT 'END'";
-
+    Serial.println("script_path");
     Serial.println("----------------------\n");
-    Serial.println(code);
+    Serial.println(script_path);
     Serial.println("----------------------\n");
-    execute_commands(code);
+    Serial.println();
+
+
+    execute_commands(script_path);
 }
 
 

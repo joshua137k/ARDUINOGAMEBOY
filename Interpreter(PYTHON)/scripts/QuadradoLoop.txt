@@ -1,0 +1,14 @@
+# Initialize the variables
+INT x 50
+INT y 50
+# Loop to create the pattern
+DELAY 1000
+WHILE y < 100
+    CLEAN
+    #x,y,size,color
+    SET x y 5 red
+    y = y + 10
+    PRINT x ',' y
+    DELAY 300
+ENDWHILE
+PRINT 'END';

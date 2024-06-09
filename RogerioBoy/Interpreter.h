@@ -1,7 +1,7 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-#include <ESP_8_BIT_GFX.h>
+#include "ESP_8_BIT_composite.h"
 #include "Dictionary.h"
 
 
