@@ -2,8 +2,10 @@
 #include "Interpreter.h"
 #include "video_display.h"
 
-
-Dictionary variable(100);
+const size_t capacity = JSON_OBJECT_SIZE(50) + 500;
+DynamicJsonDocument variable(capacity);
+DynamicJsonDocument functions(capacity);
+DynamicJsonDocument functionsbtn(capacity);
 
 #include <stdint.h>
 
@@ -18,27 +20,7 @@ const uint8_t colors[] = {
     0xFF  // Branco
 };
 
-
-
-float getValueFromDict(const char* key) {
-    if (variable.exists(key)) {
-        ValueType type;
-        Value value = variable.getValue(key, type);
-        switch (type) {
-            case INT:
-                return (float)value.intValue;
-            case FLOAT:
-                return value.floatValue;
-            default:
-                return 0.0; // Aqui podemos lançar um erro ou lidar de forma diferente
-        }
-    } else {
-        return atof(key);
-    }
-
-}
-
-
+// Function to strip whitespace from a string
 char* strip(char* str) {
     while (isspace(*str)) str++;
     if (*str == 0) return str;
@@ -48,6 +30,7 @@ char* strip(char* str) {
     return str;
 }
 
+// Function to count tokens in a string based on delimiter
 int maxToken(const char* str, char* delimit) {
     int count = 0;
     while (*str) {
@@ -59,6 +42,7 @@ int maxToken(const char* str, char* delimit) {
     return count + 1;
 }
 
+// Function to split a string into tokens
 char** split(const char* str, char* delimit, int* num_token) {
     char* str_copy = strdup(str);
     int token_count = maxToken(str, delimit);
@@ -79,23 +63,30 @@ char** split(const char* str, char* delimit, int* num_token) {
     return parts;
 }
 
+// Function to evaluate a mathematical expression
 float evaluateMath(const char* expression) {
     char* expr_copy = strdup(expression);
     char* token = strtok(expr_copy, " ");
+    
     float result = 0.0;
     char last_op = '+';
+    float value = 0;
     while (token != NULL) {
         if (strcmp(token, "+") == 0 || strcmp(token, "-") == 0 || strcmp(token, "*") == 0 || strcmp(token, "/") == 0) {
             last_op = token[0];
         } else {
-            float value = getValueFromDict(token);;
-            
+            if (variable.containsKey(token)) {
+                value = variable[token].as<float>();
+            }
+            else {value = atof(token);}
             switch (last_op) {
                 case '+': result += value; break;
                 case '-': result -= value; break;
                 case '*': result *= value; break;
                 case '/': result /= value; break;
             }
+            
+
         }
         token = strtok(NULL, " ");
     }
@@ -103,6 +94,7 @@ float evaluateMath(const char* expression) {
     return result;
 }
 
+// Function to compare two values based on an operator
 bool compareValues(float leftValue, const char* op, float rightValue) {
     if (strcmp(op, ">") == 0) return leftValue > rightValue;
     if (strcmp(op, "<") == 0) return leftValue < rightValue;
@@ -112,7 +104,6 @@ bool compareValues(float leftValue, const char* op, float rightValue) {
     if (strcmp(op, "!=") == 0) return leftValue != rightValue;
     return false;
 }
-
 
 bool evaluate_condition(const char** condition, int partNumber) {
     float leftValue = 0;
@@ -126,16 +117,17 @@ bool evaluate_condition(const char** condition, int partNumber) {
         } else if (strcmp(condition[i], "or") == 0) {
             logicalAnd = false;
         } else if (i % 4 == 0) {  // this should be the left value or a variable
-            if (variable.exists(condition[i])) {
-                leftValue = getValueFromDict(condition[i]);
+            if (variable.containsKey(condition[i])) {
+   
+                leftValue = variable[condition[i]].as<float>();
             } else {
                 leftValue = atof(condition[i]);
             }
         } else if (i % 4 == 1) {  // this should be the operator
             op = condition[i];
         } else if (i % 4 == 2) {  // this should be the right value or a variable
-            if (variable.exists(condition[i])) {
-                rightValue = getValueFromDict( condition[i]);
+            if (variable.containsKey(condition[i])) {
+                rightValue = variable[condition[i]].as<float>();
             } else {
                 rightValue = atof(condition[i]);
             }
@@ -152,10 +144,6 @@ bool evaluate_condition(const char** condition, int partNumber) {
     return logicalAnd;  // if all AND conditions passed, return true
 }
 
-
-
-
-
 void cleanScreen(const char** args, int partNumber) {
     clean();
 }
@@ -166,16 +154,28 @@ void timedelay(const char** args, int partNumber) {
 
 }
 
-
-
-
 int btn_state(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
-    Serial.print("Button state with args: ");
-    Serial.println(args[0]);  // Print the first argument
-    return i + 1;
+    const char* func_name = args[0];
+    partNumber--;
+
+    
+    String block_commands = "";
+    i++;
+    while (i < num_tokens && strcmp(strip((char*)lines[i]), "ENDBTNFUNC") != 0) {
+        block_commands += String(strip((char*)lines[i])) + "\n";
+        i++;
+    }
+
+    JsonArray param_array = functionsbtn[func_name].createNestedArray("parameters");
+    for (int j = 1; j < partNumber; j++) {
+        param_array.add(strdup(args[j]));
+    }
+    functionsbtn[func_name]["block_commands"] = block_commands;
+
+
+
+    return i;
 }
-
-
 
 int while_loop(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
     String block_commands = "";
@@ -206,7 +206,6 @@ int while_loop(const char** args, int i, const char** lines, int partNumber, int
     return i;
 }
 
-
 void handle_assignment(const char* line) {
     char* line_copy = strdup(line);
     char* var_name = strtok(line_copy, "=");
@@ -216,19 +215,7 @@ void handle_assignment(const char* line) {
         var_name = strip(var_name);
         expression = strip(expression);
         float value = evaluateMath(expression);
-        ValueType type;
-        Value v = variable.getValue(var_name, type);
-        
-        switch (type) {
-            case INT:
-                v.intValue = (int)value;
-                variable.change(var_name, v, type);
-                break;
-            case FLOAT:
-                v.floatValue = value;
-                variable.change(var_name, v, type);
-                break;
-        }
+        variable[var_name] = value;
     }
     free(line_copy);
 }
@@ -238,18 +225,24 @@ void set_color(const char** args, int partNumber) {
     // 4 args x,y,size,color
     uint8_t color = colors[0];
     if (strcmp(args[3],"red")==0){ color = colors[4];}
-    int x = (int)getValueFromDict(args[0]); 
-    int y=(int)getValueFromDict(args[1]);
-    int size=(int)getValueFromDict(args[2]);
+    int x =0;
+    int y =0;
+    int size = 0;
+    if (variable.containsKey(args[0])){
+        x = variable[args[0]].as<int>();
+    }else{x = atoi(args[0]);}
+    if (variable.containsKey(args[1])){
+        y = variable[args[1]].as<int>();
+    }else{y = atoi(args[1]);}
+    if (variable.containsKey(args[2])){
+        size = variable[args[2]].as<int>();
+    }else{size = atoi(args[2]);}
+    
+
+    Serial.print(x);Serial.print(",");Serial.print(y);Serial.print(",");Serial.print(size);Serial.print(",");Serial.println(color);
 
     videoOut.waitForFrame();
-    drawSquare(x,y,size,color);
-    
-    
-
-    
-
-    
+    drawSquare(x, y, size, color);
 }
 
 int if_statement(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
@@ -281,9 +274,10 @@ int if_statement(const char** args, int i, const char** lines, int partNumber, i
 void print_message(const char** args, int partNumber) {
     String message = "";
     bool is_str = false;
-    //partNumber--;
-    
     for (int i = 0; i < partNumber; i++) {
+        if (args[i] == NULL || strcmp(args[i], "\n") == 0) {
+            break;
+        }
         String arg = String(args[i]);
         
         if (arg.startsWith("'") && arg.endsWith("'") && arg.length() > 1) {
@@ -300,106 +294,160 @@ void print_message(const char** args, int partNumber) {
         } else if (is_str) {
             message += arg + " ";
         } else {
-            ValueType type;
-            Value value = variable.getValue(arg.c_str(), type);
-            message += variable.valueToString(value, type);
+            message += String(variable[args[i]].as<float>());
         }
     }
 
-    Serial.println("SERIAL.PRINT: "+message);
+    Serial.println("SERIAL.PRINT: " + message);
 }
 
-void get_matrix_value(const char** args, int partNumber) {
-    Serial.print("Get matrix value with args: ");
-    Serial.println(args[0]);
-}
+void filterCommonElements(DynamicJsonDocument& v, DynamicJsonDocument& c) {
+    const char* keysToRemove[20];
+    int keysCount = 0;
 
-void set_matrix_value(const char** args, int partNumber) {
-    Serial.print("Set matrix value with args: ");
-    Serial.println(args[0]);
+    for (JsonPair kv : v.as<JsonObject>()) {
+        const char* key = kv.key().c_str();
+
+        if (!c.containsKey(key)) {
+            if (keysCount < 20) {
+                keysToRemove[keysCount++] = key;
+            }
+        }
+    }
+
+    for (int i = 0; i < keysCount; ++i) {
+        v.remove(keysToRemove[i]);
+    }
 }
 
 int define_function(const char** args, int i, const char** lines, int partNumber, int num_tokens) {
-    Serial.print("Define function with args: ");
-    Serial.println(args[0]);
-    return i + 1;
-}
+    const char* func_name = args[0];
+    partNumber--;
 
-void call_function(const char** args, int partNumber) {
-    Serial.print("Call function with args: ");
-    Serial.println(args[0]);
+    
+    String block_commands = "";
+    i++;
+    while (i < num_tokens && strcmp(strip((char*)lines[i]), "ENDFUNC") != 0) {
+        block_commands += String(strip((char*)lines[i])) + "\n";
+        i++;
+    }
+
+    JsonArray param_array = functions[func_name].createNestedArray("parameters");
+    for (int j = 1; j < partNumber; j++) {
+        param_array.add(strdup(args[j]));
+    }
+    functions[func_name]["block_commands"] = block_commands;
+
+
+
+    return i;
 }
 
 void call_BTNfunction(const char** args, int partNumber) {
-    Serial.print("Call button function with args: ");
-    Serial.println(args[0]);
+    const char* func_name = args[0];
+
+    if (functionsbtn.containsKey(func_name)) {
+        DynamicJsonDocument cloneDoc(capacity);
+        cloneDoc.set(variable);
+
+
+        JsonArray params = functionsbtn[func_name]["parameters"].as<JsonArray>();
+        for (int i = 0; i < params.size(); i++) {
+            if (variable.containsKey( args[i + 1])){
+                variable[params[i].as<const char*>()] = variable[args[i + 1]];
+            }else{
+                variable[params[i].as<const char*>()] = atof(args[i + 1]);
+            }
+            
+            
+        }
+        execute_commands(functionsbtn[func_name]["block_commands"].as<String>().c_str());
+
+        filterCommonElements(variable,cloneDoc);
+
+
+        
+
+        
+    } else {
+        Serial.printf("Função não encontrada: %s\n", func_name);
+    }
 }
 
 void declare_int(const char** args, int partNumber) {
-    variable.addItem(args[0], atoi(args[1]));
+    variable[args[0]] = atoi(args[1]);
 }
 
 void declare_float(const char** args, int partNumber) {
-    variable.addItem(args[0], (float)atof(args[1]));
+    variable[args[0]] = (float)atof(args[1]);
 }
 
 void declare_str(const char** args, int partNumber) {
-    variable.addItem(args[0], args[1]);
-}
-
-void declare_matrix(const char** args, int partNumber) {
-    int rows = atoi(args[1]);
-    int cols = atoi(args[2]);
-    int** matrix = new int*[rows];
-    for (int i = 0; i < rows; i++) {
-        matrix[i] = new int[cols];
-    }
-    variable.addItem(args[0], matrix);
+    variable[args[0]] = args[1];
 }
 
 void declare_vector(const char** args, int partNumber) {
-    int* vec = new int[atoi(args[1])];
-    variable.addItem(args[0], vec);
+    JsonArray array = variable[args[0]].createNestedArray("vetor");
 }
 
-void evaluate(const char** expression, int partNumber) {
-    Serial.print("Evaluate expression: ");
-    Serial.println(expression[0]);
+void call_function(const char** args, int partNumber) {
+    const char* func_name = args[0];
+
+    if (functions.containsKey(func_name)) {
+        DynamicJsonDocument cloneDoc(capacity);
+        cloneDoc.set(variable);
+
+
+        JsonArray params = functions[func_name]["parameters"].as<JsonArray>();
+        for (int i = 0; i < params.size(); i++) {
+            if (variable.containsKey( args[i + 1])){
+                variable[params[i].as<const char*>()] = variable[args[i + 1]];
+            }else{
+                variable[params[i].as<const char*>()] = atof(args[i + 1]);
+            }
+            
+            
+        }
+        execute_commands(functions[func_name]["block_commands"].as<String>().c_str());
+
+
+
+        filterCommonElements(variable,cloneDoc);
+
+        
+
+        
+    } else {
+        Serial.printf("Função não encontrada: %s\n", func_name);
+    }
 }
 
 const char* commandNames[] = {
     "SET", // COOLOCAR QUADRADO NA TELA (X,Y,SIZE,COLOR)
     "PRINT", // DAR PRINT NO TERMINAL
-    "GETMATRIXVALUE", // PEGAR ELEMENTO DE UMA MATRIZ
-    "SETMATRIXVALUE",// SETAR ELEMENTO DE UMA MATRIZ
     "CALL", // CHAMAR FUNÇÂO
     "INT", // DECLARAR UM INT
     "FLOAT",// DECLARAR UM FLOAT
     "STR",// DECLARAR UM STR
-    "MATRIX",// DECLARAR UM MATRIX
     "VECTOR",// DECLARAR UM VECTOR
     "CLEAN", //LIMPAR TELA
     "DELAY"// FAZ UMA PAUSA
 };
 
 Command commands[] = {
-    {"FUNC_BTNSTATE", btn_state, NULL},
+    {"FUNC_BTNSTATE", btn_state, NULL},//OK
     {"WHILE", while_loop, NULL},//ok
     {"SET", NULL, set_color},//OK
     {"IF", if_statement, NULL},//OK
     {"PRINT", NULL, print_message},//OK
-    {"GETMATRIXVALUE", NULL, get_matrix_value},
-    {"SETMATRIXVALUE", NULL, set_matrix_value},
-    {"FUNC", define_function, NULL},
-    {"CALL", NULL, call_function},
+    {"FUNC", define_function, NULL},//OK
+    {"CALL", NULL, call_function},//OK
     {"INT", NULL, declare_int},//OK
     {"FLOAT", NULL, declare_float},//OK
     {"STR", NULL, declare_str},//OK
-    {"MATRIX", NULL, declare_matrix},//OK
     {"VECTOR", NULL, declare_vector},//OK
-    {"CLEAN",NULL,cleanScreen},//OK
-    {"DELAY",NULL,timedelay} //OK
-    
+    {"CLEAN", NULL, cleanScreen},//OK
+    {"DELAY", NULL, timedelay} //OK
 };
 
 int callFunctionByNameINT(const char* command_name, const char** args, int i, const char** lines, int partNumber, int num_tokens) {
@@ -440,18 +488,15 @@ bool isCommand(const char* n) {
 }
 
 void execute_commands(const char* commands) {
-    
-    
+
+
     int num_tokens;
     char** p = split(commands, "\n", &num_tokens);
-    for (int i = 0; i < num_tokens -1; i++) {
-       
-        
+    for (int i = 0; i < num_tokens - 1; i++) {
         char* line = strip(p[i]);
         if (line == NULL || line[0] == '\0' || line[0] == '#') {
             continue;
         }
-
         if (strstr(line, "=") != NULL) {
             handle_assignment(line);
         } else {
@@ -471,27 +516,18 @@ void execute_commands(const char* commands) {
                     callFunctionByName(command, (const char**)args, partNumber - 1);
                 }
             }
-            
+
             delete[] args;
-        
-        free(part);
-        
-            
+            free(part);
         }
     }
     free(p);
 }
 
 void execute_script(const char* script_path) {
-    Serial.println("script_path");
-    Serial.println("----------------------\n");
+    Serial.println("----------------------------------------------");
     Serial.println(script_path);
-    Serial.println("----------------------\n");
-    Serial.println();
-
+    Serial.println("----------------------------------------------");
 
     execute_commands(script_path);
 }
-
-
-

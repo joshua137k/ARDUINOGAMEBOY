@@ -11,15 +11,12 @@ class Interpreter:
             'INT': self.declare_int,
             'FLOAT': self.declare_float,
             'STR': self.declare_str,
-            'MATRIX': self.declare_matrix,
             'VECTOR': self.declare_vector,
-            'INPUT': self.input_var,
             'WHILE': self.while_loop,
             'FUNC': self.define_function,
             'CALL': self.call_function,
             'FUNC_BTNSTATE': self.btn_state,
-            'GETMATRIXVALUE': self.get_matrix_value,
-            'SETMATRIXVALUE': self.set_matrix_value
+
 
         }
 
@@ -137,22 +134,10 @@ class Interpreter:
         self.variables[args[0]] = self.evaluate(" ".join(args[1:]))
 
 
-    def declare_matrix(self, args):
-        name = args[0]
-        rows, cols = int(args[1]), int(args[2])
-        self.variables[name] = [[0] * cols for _ in range(rows)]
-
-
     def declare_vector(self, args):
         name = args[0]
         size = int(args[1])
         self.variables[name] = [0] * size
-
-
-    def input_var(self, args):
-        var_name = args[0]
-        value = input(f"Enter value for {var_name}: ")
-        self.variables[var_name] = self.evaluate(value)
 
 
     def print_message(self, args):
@@ -202,25 +187,7 @@ class Interpreter:
         except:
             return expression.strip('"')
 
-    def get_matrix_value(self, args):
-        matrix_name = args[0]
-        row = int(self.evaluate(args[1]))
-        col = int(self.evaluate(args[2]))
-        var_name = args[3]
-        if matrix_name in self.variables and isinstance(self.variables[matrix_name], list):
-            self.variables[var_name] = self.variables[matrix_name][row][col]
-        else:
-            print(f"Error: Matrix '{matrix_name}' not found.")
 
-    def set_matrix_value(self, args):
-        matrix_name = args[0]
-        row = int(self.evaluate(args[1]))
-        col = int(self.evaluate(args[2]))
-        value = self.evaluate(args[3])
-        if matrix_name in self.variables and isinstance(self.variables[matrix_name], list):
-            self.variables[matrix_name][row][col] = value
-        else:
-            print(f"Error: Matrix '{matrix_name}' not found.")
 
     def evaluate_condition(self, condition):
         try:

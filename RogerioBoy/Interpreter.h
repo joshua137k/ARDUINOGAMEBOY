@@ -2,8 +2,7 @@
 #define INTERPRETER_H
 
 #include "ESP_8_BIT_composite.h"
-#include "Dictionary.h"
-
+#include <ArduinoJson.h>
 
 
 typedef int (*CommandFuncInt)(const char**, int, const char**,int ,int );
@@ -19,7 +18,7 @@ void execute_script(const char* script_path);
 
 void execute_commands(const char* commands);
 
-void call_BTNfunction(const char** args);
+void call_BTNfunction(const char** args,int partNumber);
 
 
 #endif

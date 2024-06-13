@@ -3,17 +3,18 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
-
 const char* ssid = "MEO-0E1870";
 const char* password = "ddcb9dc1e3";
 WebServer server(80);
-
 
 // Página HTML
 const char* html = R"rawliteral(
   <!DOCTYPE HTML><html>
   <head>
-    <title>ESP32 Text Input</title>
+    <title>ROGERIOBOY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
     <style>
       body { font-family: Arial, sans-serif; margin: 40px; }
       textarea { width: 100%; height: 200px; }
@@ -23,17 +24,35 @@ const char* html = R"rawliteral(
   <body>
     <h1>Enter Script Text</h1>
     <form action="/get" method="GET">
-      <textarea name="input"></textarea><br><br>
+      <textarea id="code" name="input"></textarea><br><br>
       <input type="submit" value="Submit">
     </form>
+    <button onclick="executeFunction()">LEFT</button>
+    <script>
+      function executeFunction() {
+        fetch('/execute');
+      }
+    </script>
   </body>
   </html>
 )rawliteral";
 
 
+
+void executeArduinoFunction() {
+  const char* list[] = {"LEFT"};
+  call_BTNfunction(list,1);
+}
+
+
+
+
+
+
 void setup() {
   Serial.begin(115200);
   initializeVideo();
+  
   // Conecta ao Wi-Fi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -41,7 +60,7 @@ void setup() {
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
-  // Imprime o endereço IP
+  
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
@@ -61,23 +80,20 @@ void setup() {
     }
   });
 
+  // Rota para executar a função
+  server.on("/execute", HTTP_GET, []() {
+    // Chama a função desejada aqui
+    executeArduinoFunction();
+    server.send(200, "text/html", "Function executed<br><a href=\"/\">Go Back</a>");
+  });
+
   // Inicia o servidor
   server.begin();
-  //execute_script("TOOS");
-
-
-  
-  
-
-  
-
 }
-
-
-
-
 
 void loop() {
   // Handle server requests
   server.handleClient();
 }
+
+

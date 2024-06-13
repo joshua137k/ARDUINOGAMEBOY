@@ -5,7 +5,7 @@ INT T 30
 WHILE x < T
     y = 0
     WHILE y < T
-        SET x y red
+        SET x y 5 red
         y = y + 1
 
         
@@ -13,7 +13,7 @@ WHILE x < T
     
     
     x = x + 1
-    PRINT "Dy:" y "Dx:" x
+    PRINT 'Dy:' y 'Dx:' x
 
     
 ENDWHILE

@@ -7,15 +7,15 @@ INT conf 0
 
 FUNC_BTNSTATE LEFT
     x = x + 1
-    SET x y red
-    PRINT "Button 1 was clicked!"
+    SET x y 5 red
+    PRINT 'Button 1 was clicked!'
 ENDBTNFUNC
 
 
 FUNC_BTNSTATE DOWN
     y = y + 1
-    SET x y red
-    PRINT "Button 1 was clicked!"
+    SET x y 5 red
+    PRINT 'Button 1 was clicked!'
 ENDBTNFUNC
 
 

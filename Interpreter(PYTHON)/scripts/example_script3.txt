@@ -6,4 +6,4 @@ WHILE counter < 5
     PRINT counter
     counter = counter + 1
 ENDWHILE
-PRINT "END"
+PRINT 'END'

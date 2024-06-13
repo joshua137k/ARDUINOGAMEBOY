@@ -1,7 +1,7 @@
 # Declare variables to store user input
 INT user_int 0
 FLOAT user_float 0.0
-STR user_str ""
+STR user_str ''
 
 
 
