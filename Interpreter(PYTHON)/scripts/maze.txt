@@ -1,0 +1,43 @@
+# Definindo variáveis
+INT x 10
+INT y 20
+INT size 4
+
+
+CLEAN
+SET 95 95 size 5
+SET 95 100 size 5
+SET 95 105 size 5
+SET 100 95 size 5
+SET 100 105 size 5
+SET 105 95 size 5
+SET 105 100 size 5
+SET 105 105 size 5
+
+
+
+FUNC_BTNSTATE RIGHT
+	CLEAN
+    x = x + 5
+    SET x y 5 0
+ENDBTNFUNC
+
+FUNC_BTNSTATE LEFT
+	CLEAN
+    x = x - 5
+    SET x y 5 0
+ENDBTNFUNC
+
+FUNC_BTNSTATE UP
+	CLEAN
+    y = y - 5
+    SET x y 5 0
+ENDBTNFUNC
+
+FUNC_BTNSTATE DOWN
+	CLEAN
+    y = y + 5
+    SET x y 5 0
+ENDBTNFUNC
+
+

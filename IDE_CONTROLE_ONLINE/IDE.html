@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROGERIOBOY Code Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .editor-container {
+            width: 80%;
+            height: 60%;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .CodeMirror {
+            height: 100%;
+            font-size: 14px;
+        }
+
+        .cm-keyword {
+            color: #d73a49;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .url-input {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 300px;
+        }
+
+        .submit-button {
+            padding: 10px 20px;
+            font-size: 14px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <textarea id="code-editor"></textarea>
+    </div>
+
+    <div class="controls">
+        <input type="text" id="url" class="url-input" placeholder="Enter URL" />
+        <button class="submit-button" onclick="submitCode()">Submit</button>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script>
+        CodeMirror.defineMode("customMode", function() {
+            return {
+                token: function(stream) {
+                    const keywords = ["#","'","SET", "PRINT", "CALL", "INT", "FLOAT", "STR", "VECTOR", "CLEAN", "DELAY","IF","WHILE","ENDIF","ENDWHILE","FUNC","ENDFUNC","FUNC_BTNSTATE","ENDBTNFUNC"];
+                    if (stream.match(new RegExp(`\\b(${keywords.join("|")})\\b`))) {
+                        return "keyword";
+                    }
+                    stream.next();
+                    return null;
+                }
+            };
+        });
+
+        const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            lineNumbers: true,
+            mode: "customMode",
+            theme: "default"
+        });
+
+        // Function to save content to localStorage
+        function saveContent() {
+            localStorage.setItem('codeContent', editor.getValue());
+            localStorage.setItem('urlContent', document.getElementById('url').value);
+        }
+
+        // Function to load content from localStorage
+        function loadContent() {
+            const codeContent = localStorage.getItem('codeContent');
+            const urlContent = localStorage.getItem('urlContent');
+            if (codeContent) {
+                editor.setValue(codeContent);
+            }
+            if (urlContent) {
+                document.getElementById('url').value = urlContent;
+            }
+        }
+
+        // Load content when the page loads
+        window.onload = loadContent;
+
+        // Save content before the page unloads
+        window.onbeforeunload = saveContent;
+
+        function submitCode() {
+            const code = encodeURIComponent(editor.getValue());
+            const url = document.getElementById('url').value;
+            const fullUrl = `${url}get?input=${code}`;
+
+            fetch(fullUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                mode: 'cors' 
+            })
+            alert('Code was successfully sent!');
+
+        }
+    </script>
+</body>
+</html>

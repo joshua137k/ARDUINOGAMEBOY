@@ -11,7 +11,7 @@
   - [Built-in Functions](#built-in-functions)
 - [Example Scripts](#example-scripts)
   - [User Printing](#example-1-user-printing)
-  - [Matrix and Vector Operations](#example-2-matrix-and-vector-operations)
+  - [Vector Operations](#example-2-vector-operations)
   - [Conditional and Loops](#example-3-conditional-and-loops)
   - [Functions](#example-4-functions)
   - [Maze Game](#example-5-maze-game)
@@ -25,7 +25,6 @@ The verdant tapestry of our scripting language begins with variables. Variables 
 - `INT`: Integer
 - `FLOAT`: Floating point number
 - `STR`: String
-- `MATRIX`: Matrix
 - `VECTOR`: Vector
 
 **Example:**
@@ -34,7 +33,6 @@ The verdant tapestry of our scripting language begins with variables. Variables 
 INT x 0
 FLOAT y 0.0
 STR name "John"
-MATRIX mat 3 3
 VECTOR vec 3
 ```
 
@@ -89,8 +87,6 @@ The built-in functions are the essential tools in our scripting crucible, provid
 
 - `PRINT`: Outputs a message or variable to the console.
 - `SET`: Draws a square on the display with specified coordinates, size, and color.
-- `GETMATRIXVALUE`: Retrieves a value from a matrix.
-- `SETMATRIXVALUE`: Sets a value in a matrix.
 - `CLEAN`: Clears the screen.
 - `DELAY`: Pauses the execution for a specified time.
 
@@ -99,7 +95,6 @@ The built-in functions are the essential tools in our scripting crucible, provid
 ```plaintext
 PRINT "Hello, World!"
 SET 10 20 5 red
-GETMATRIXVALUE matrix i j value
 CLEAN
 DELAY 1000
 ```
@@ -120,12 +115,11 @@ PRINT user_float
 PRINT user_str
 ```
 
-### Example 2: Matrix and Vector Operations
+### Example 2:Vector Operations
 
 Delve into the more complex operations involving matrices and vectors.
 
 ```plaintext
-MATRIX mat 3 3
 VECTOR vec 3
 
 mat[0][0] = 1
@@ -185,14 +179,10 @@ Embark on creating a labyrinthine game, demonstrating the power of functions, lo
 ```plaintext
 INT player_x 0
 INT player_y 0
-MATRIX maze 10 10
 
-SETMATRIXVALUE maze 1 1 1
-# Define other maze walls...
 
 FUNC_BTNSTATE LEFT
     IF player_x > 0
-        GETMATRIXVALUE maze player_y player_x-1 cell_value
         IF cell_value equals 0
             player_x = player_x - 1
         ENDIF

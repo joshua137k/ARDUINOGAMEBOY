@@ -46,7 +46,7 @@ int maxToken(const char* str, char* delimit) {
 char** split(const char* str, char* delimit, int* num_token) {
     char* str_copy = strdup(str);
     int token_count = maxToken(str, delimit);
-    *num_token = token_count;
+    
     char** parts = (char**)malloc(token_count * sizeof(char*));
     if (!parts) {
         free(str_copy);
@@ -59,6 +59,7 @@ char** split(const char* str, char* delimit, int* num_token) {
         index++;
         token = strtok(NULL, delimit);
     }
+    *num_token = index;
     free(str_copy);
     return parts;
 }
@@ -71,6 +72,7 @@ float evaluateMath(const char* expression) {
     float result = 0.0;
     char last_op = '+';
     float value = 0;
+   
     while (token != NULL) {
         if (strcmp(token, "+") == 0 || strcmp(token, "-") == 0 || strcmp(token, "*") == 0 || strcmp(token, "/") == 0) {
             last_op = token[0];
@@ -109,39 +111,27 @@ bool evaluate_condition(const char** condition, int partNumber) {
     float leftValue = 0;
     float rightValue = 0;
     const char* op = nullptr;
-    bool logicalAnd = true;  // default to AND operation if none specified
 
-    for (int i = 0; i < partNumber-1; i++) {
-        if (strcmp(condition[i], "and") == 0) {
-            logicalAnd = true;
-        } else if (strcmp(condition[i], "or") == 0) {
-            logicalAnd = false;
-        } else if (i % 4 == 0) {  // this should be the left value or a variable
-            if (variable.containsKey(condition[i])) {
-   
-                leftValue = variable[condition[i]].as<float>();
-            } else {
-                leftValue = atof(condition[i]);
-            }
-        } else if (i % 4 == 1) {  // this should be the operator
-            op = condition[i];
-        } else if (i % 4 == 2) {  // this should be the right value or a variable
-            if (variable.containsKey(condition[i])) {
-                rightValue = variable[condition[i]].as<float>();
-            } else {
-                rightValue = atof(condition[i]);
-            }
 
-            // Evaluate the expression
-            bool result = compareValues(leftValue, op, rightValue);
-            if (logicalAnd) {
-                if (!result) return false;  // AND operation, if any false, return false
-            } else {
-                if (result) return true;  // OR operation, if any true, return true
-            }
-        }
+    if (variable.containsKey(condition[0])) {
+
+        leftValue = variable[condition[0]].as<float>();
+    } else {
+        leftValue = atof(condition[0]);
     }
-    return logicalAnd;  // if all AND conditions passed, return true
+
+    op = condition[1];
+
+    if (variable.containsKey(condition[2])) {
+        rightValue = variable[condition[2]].as<float>();
+    } else {
+        rightValue = atof(condition[2]);
+    }
+
+
+    bool result = compareValues(leftValue, op, rightValue);
+
+    return result;  
 }
 
 void cleanScreen(const char** args, int partNumber) {
@@ -202,6 +192,7 @@ int while_loop(const char** args, int i, const char** lines, int partNumber, int
         execute_commands(block_commands.c_str());
     }
 
+
     // Retornar o índice do fim do bloco while
     return i;
 }
@@ -239,7 +230,6 @@ void set_color(const char** args, int partNumber) {
     }else{size = atoi(args[2]);}
     
 
-    Serial.print(x);Serial.print(",");Serial.print(y);Serial.print(",");Serial.print(size);Serial.print(",");Serial.println(color);
 
     videoOut.waitForFrame();
     drawSquare(x, y, size, color);
@@ -492,11 +482,12 @@ void execute_commands(const char* commands) {
 
     int num_tokens;
     char** p = split(commands, "\n", &num_tokens);
-    for (int i = 0; i < num_tokens - 1; i++) {
+    for (int i = 0; i < num_tokens ; i++) {
         char* line = strip(p[i]);
-        if (line == NULL || line[0] == '\0' || line[0] == '#') {
-            continue;
+        if (line == NULL ){
+            break;
         }
+        if ( line[0] == '\0' || line[0] == '#') {continue;}
         if (strstr(line, "=") != NULL) {
             handle_assignment(line);
         } else {
