@@ -221,9 +221,9 @@ void set_color(const char** args, int partNumber) {
     Serial.print(" size:");Serial.print(args[2]);
     Serial.print(" color:");Serial.println(args[3]);
 
-    bool breakk = false;
-    for (int i=0;i<4;i++){if (args[0]==NULL) {breakk=true;break;}}
-    if (breakk){return;}
+
+    for (int i=0;i<4;i++){if (args[i]==NULL) {return;}}
+
     
     if (variable.containsKey(args[3])){
         colorInd = variable[args[3]].as<int>();

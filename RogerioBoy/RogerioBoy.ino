@@ -632,6 +632,18 @@ void setup() {
     SET 240 220 10 6
     SET 240 230 10 6
     SET 240 240 10 6
+    INT x 0
+    INT y 0
+    DELAY 1000
+    WHILE x < 240
+        x = x + 10
+        y = 0 
+        WHILE y < 240
+            y = y + 10
+            SET x y 10 1
+            DELAY 100
+        ENDWHILE
+    ENDWHILE
 
       )";
 
