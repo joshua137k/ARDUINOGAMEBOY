@@ -215,7 +215,23 @@ void set_color(const char** args, int partNumber) {
 
     // 4 args x,y,size,color
     uint8_t color = colors[0];
-    if (strcmp(args[3],"red")==0){ color = colors[4];}
+    int colorInd=0;
+    Serial.print("x:");Serial.print(args[0]);
+    Serial.print(" y:");Serial.print(args[1]);
+    Serial.print(" size:");Serial.print(args[2]);
+    Serial.print(" color:");Serial.println(args[3]);
+
+    bool breakk = false;
+    for (int i=0;i<4;i++){if (args[0]==NULL) {breakk=true;break;}}
+    if (breakk){return;}
+    
+    if (variable.containsKey(args[3])){
+        colorInd = variable[args[3]].as<int>();
+    }else{colorInd = atoi(args[3]);}
+
+    if (colorInd>=0 && colorInd<=7){color=colors[colorInd];}
+
+
     int x =0;
     int y =0;
     int size = 0;
@@ -478,10 +494,18 @@ bool isCommand(const char* n) {
 }
 
 void execute_commands(const char* commands) {
+    if (commands == NULL) {
+        Serial.println("Comando nulo recebido.");
+        return;
+    }
 
 
     int num_tokens;
     char** p = split(commands, "\n", &num_tokens);
+    if (p == NULL) {
+        Serial.println("Erro ao dividir os comandos.");
+        return;
+    }
     for (int i = 0; i < num_tokens ; i++) {
         char* line = strip(p[i]);
         if (line == NULL ){
@@ -493,6 +517,10 @@ void execute_commands(const char* commands) {
         } else {
             int partNumber;
             char** part = split(line, " ", &partNumber);
+            if (part == NULL) {
+                Serial.printf("Erro ao dividir a linha %d.\n", i);
+                continue;
+            }
             char* command = part[0];
             char** args = new char*[partNumber - 1];
 

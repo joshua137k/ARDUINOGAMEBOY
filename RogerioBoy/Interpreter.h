@@ -1,8 +1,8 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-#include "ESP_8_BIT_composite.h"
 #include <ArduinoJson.h>
+#include "video_display.h"
 
 
 typedef int (*CommandFuncInt)(const char**, int, const char**,int ,int );
