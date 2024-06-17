@@ -522,6 +522,7 @@ void execute_commands(const char* commands) {
                 continue;
             }
             char* command = part[0];
+            if (command==NULL){continue;}
             char** args = new char*[partNumber - 1];
 
             for (int kk = 1; kk < partNumber; kk++) {
